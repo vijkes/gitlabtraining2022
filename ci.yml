@@ -1,0 +1,51 @@
+stages:
+    - build
+    - deploy
+
+build job:
+    stage: build
+    script:
+        - echo "this is build."
+        - hostname
+        - echo $CI_HAS_OPEN_REQUIREMENTS
+        - echo $CI_DISPOSABLE_ENVIRONMENT
+        - echo $CHAT_CHANNEL
+        - echo $CI_BUILDS_DIR
+        - echo $CI_COMMIT_DESCRIPTION
+        - echo $CI_COMMIT_BRANCH
+        - echo $CI_REGISTRY_USER
+        - echo $CI_REGISTRY
+        - echo $CI_REPOSITORY_URL
+        - echo $CI_REGISTRY_PASSWORD   
+        - echo $CI_PIPELINE_ID
+        - date   
+        #- cat app.py
+        #- cat Dockerfile
+        - whoami 
+        #- docker rmi -f mypyapp
+    #    - docker build -t mypyapp:$CI_PIPELINE_ID . 
+        - docker login $CI_REGISTRY -u $CI_REGISTRY_USER  -p $CI_REGISTRY_PASSWORD
+        - docker build  -t registry.gitlab.com/vijkesss/thirdproject/mypyapp:$CI_PIPELINE_ID .
+        - docker push registry.gitlab.com/vijkesss/thirdproject/mypyapp:$CI_PIPELINE_ID
+    tags:
+        - mybuild
+           
+
+production job:
+    stage: deploy
+    script:
+        - echo "on production"        
+        - hostname
+        - echo $CI_NODE_TOTAL
+        - echo $CI_JOB_STAGE
+        - echo $CI_JOB_IMAGE
+        - echo $CI_JOB_ID
+        - echo $CI_REGISTRY_IMAGE
+        - docker login $CI_REGISTRY -u $CI_REGISTRY_USER  -p $CI_REGISTRY_PASSWORD
+        - docker pull registry.gitlab.com/vijkesss/thirdproject/mypyapp:$CI_PIPELINE_ID
+        - docker rm -f app1 || true
+        - docker run -dit --name app1 -p 80:8080 registry.gitlab.com/vijkesss/thirdproject/mypyapp:$CI_PIPELINE_ID
+
+    tags:
+        - production    
+        
